@@ -1,0 +1,65 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.id {
+  font-size: 0.75rem;
+  color: #444;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shape {
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+button {
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  cursor: pointer;
+}
+
+button.danger {
+  border-color: #c62828;
+  color: #b71c1c;
+  background: #ffebee;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.err {
+  width: 100%;
+  margin: 0.25rem 0 0;
+  color: #c62828;
+  font-size: 0.85rem;
+}

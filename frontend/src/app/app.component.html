@@ -1,0 +1,16 @@
+<header class="app-header">
+  <h1>{{ title }}</h1>
+  <p class="sub">API: <code>http://localhost:8000</code></p>
+</header>
+
+<main class="layout">
+  <p class="banner" *ngIf="listError" role="alert">{{ listError }}</p>
+
+  <app-object-list (editObject)="onEditObject($event)" (loadError)="onListError($event)"></app-object-list>
+
+  <app-object-form
+    [object]="selectedObject"
+    (saved)="onFormSaved()"
+    (cleared)="onFormCleared()"
+  ></app-object-form>
+</main>

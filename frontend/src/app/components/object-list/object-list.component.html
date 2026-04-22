@@ -1,0 +1,13 @@
+<section class="list-panel" aria-label="3D objects list">
+  <div class="list-header">
+    <h2>3D objects</h2>
+    <button type="button" class="link-btn" (click)="refresh()" [disabled]="loading">Refresh</button>
+  </div>
+  <p *ngIf="loading" class="hint">Loading…</p>
+  <p *ngIf="!loading && objects.length === 0" class="hint">No objects yet. Create one using the form.</p>
+  <ul class="object-rows" *ngIf="!loading && objects.length > 0">
+    <li *ngFor="let o of objects">
+      <app-object-item [object]="o" (edit)="onEdit($event)" (deleted)="onDeleted()"></app-object-item>
+    </li>
+  </ul>
+</section>

@@ -1,0 +1,25 @@
+<section class="form-panel" aria-label="Create or edit 3D object">
+  <h2>{{ isEditMode ? 'Edit object' : 'New object' }}</h2>
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="shape">Shape</label>
+      <select id="shape" formControlName="shape">
+        <option *ngFor="let s of shapeOptions" [ngValue]="s">{{ s }}</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="color">Color</label>
+      <input id="color" type="text" formControlName="color" placeholder="e.g. #ff00aa or red" />
+    </div>
+    <div class="field">
+      <label for="size">Size</label>
+      <input id="size" type="number" formControlName="size" min="0.0001" step="any" />
+    </div>
+    <p class="err" *ngIf="error">{{ error }}</p>
+    <div class="form-actions">
+      <button type="submit" [disabled]="busy || form.invalid">{{ isEditMode ? 'Update' : 'Create' }}</button>
+      <button *ngIf="isEditMode" type="button" class="secondary" (click)="newObject()" [disabled]="busy">New
+        object</button>
+    </div>
+  </form>
+</section>
