@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { Object3D, Object3DCreate, Object3DUpdate } from '../../models/object.model';
+import { Object3D, Object3DCreate, Object3DUpdate, Position3D, Rotation3D } from '../../models/object.model';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -9,7 +9,7 @@ const API_BASE = 'http://localhost:8000';
   providedIn: 'root',
 })
 export class ObjectsService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   list(): Observable<Object3D[]> {
     return this.http
@@ -41,12 +41,16 @@ export class ObjectsService {
       shape: Object3D['shape'];
       color: string | number[];
       size: number;
+      position?: Position3D;
+      rotation?: Rotation3D;
     };
     return {
       id: o.id,
       shape: o.shape,
       color: this.normalizeColor(o.color),
       size: o.size,
+      position: o.position,
+      rotation: o.rotation,
     };
   }
 

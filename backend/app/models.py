@@ -14,12 +14,28 @@ class ObjectCreate(BaseModel):
     shape: ShapeType
     color: ColorType
     size: float = Field(..., gt=0)
-
+    position: Optional[Position] = None
+    rotation: Optional[Rotation] = None
 
 class ObjectUpdate(BaseModel):
     shape: Optional[ShapeType] = None
     color: Optional[ColorType] = None
     size: Optional[float] = Field(default=None, gt=0)
+    position: Optional[Position] = None
+    rotation: Optional[Rotation] = None
+
+
+class Position(BaseModel):
+    x: Optional[float] = 0.0
+    y: Optional[float] = 0.0
+    z: Optional[float] = 0.0
+
+
+class Rotation(BaseModel):
+    roll: Optional[float] = 0.0
+    pitch: Optional[float] = 0.0
+    yaw: Optional[float] = 0.0
+   
 
 
 class Object3D(BaseModel):
@@ -27,6 +43,8 @@ class Object3D(BaseModel):
     shape: ShapeType
     color: ColorType
     size: float = Field(..., gt=0)
+    position: Optional[Position] = None
+    rotation: Optional[Rotation] = None
 
 
 class WebSocketEvent(BaseModel):

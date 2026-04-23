@@ -30,6 +30,12 @@ export class ObjectFormComponent implements OnChanges {
       size: this.fb.nonNullable.control<number | null>(1, {
         validators: [Validators.required, Validators.min(0.0001)],
       }),
+      positionX: this.fb.nonNullable.control<number>(0),
+      positionY: this.fb.nonNullable.control<number>(0),
+      positionZ: this.fb.nonNullable.control<number>(0),
+      rotationPitch: this.fb.nonNullable.control<number>(0),
+      rotationYaw: this.fb.nonNullable.control<number>(0),
+      rotationRoll: this.fb.nonNullable.control<number>(0),
     });
   }
 
@@ -45,15 +51,32 @@ export class ObjectFormComponent implements OnChanges {
           shape: this.object.shape,
           color: this.object.color,
           size: this.object.size,
+          positionX: this.object.position?.x ?? 0,
+          positionY: this.object.position?.y ?? 0,
+          positionZ: this.object.position?.z ?? 0,
+          rotationPitch: this.object.rotation?.pitch ?? 0,
+          rotationYaw: this.object.rotation?.yaw ?? 0,
+          rotationRoll: this.object.rotation?.roll ?? 0,
         });
       } else {
-        this.form.reset({
-          shape: 'cube' as Shape3D,
-          color: '',
-          size: 1,
-        });
+        this.resetToDefaults();
       }
     }
+  }
+
+  private resetToDefaults(): void {
+    this.form.reset({
+      shape: 'cube' as Shape3D,
+      color: '',
+      size: 100,
+      positionX: 0,
+      positionY: 0,
+      positionZ: 0,
+      rotationPitch: 0,
+      rotationYaw: 0,
+      rotationRoll: 0,
+    });
+    this.error = null;
   }
 
   submit(): void {
@@ -61,16 +84,28 @@ export class ObjectFormComponent implements OnChanges {
       this.form.markAllAsTouched();
       return;
     }
-    const { shape, color, size } = this.form.getRawValue();
+    const {
+      shape,
+      color,
+      size,
+      positionX,
+      positionY,
+      positionZ,
+      rotationPitch,
+      rotationYaw,
+      rotationRoll,
+    } = this.form.getRawValue();
     if (size === null) {
       return;
     }
+    const position = { x: positionX ?? 0, y: positionY ?? 0, z: positionZ ?? 0 };
+    const rotation = { pitch: rotationPitch ?? 0, yaw: rotationYaw ?? 0, roll: rotationRoll ?? 0 };
     this.error = null;
     this.busy = true;
 
     if (this.object) {
       this.objectsService
-        .update(this.object.id, { shape, color, size })
+        .update(this.object.id, { shape, color, size, position, rotation })
         .subscribe({
           next: () => {
             this.busy = false;
@@ -82,10 +117,11 @@ export class ObjectFormComponent implements OnChanges {
           },
         });
     } else {
-      const body: Object3DCreate = { shape, color, size };
+      const body: Object3DCreate = { shape, color, size, position, rotation };
       this.objectsService.create(body).subscribe({
         next: () => {
           this.busy = false;
+          this.resetToDefaults();
           this.saved.emit();
         },
         error: () => {

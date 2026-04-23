@@ -13,7 +13,42 @@
     </div>
     <div class="field">
       <label for="size">Size</label>
-      <input id="size" type="number" formControlName="size" min="0.0001" step="any" />
+      <input id="size" type="number" formControlName="size" />
+    </div>
+    <div class="field-group">
+      <label class="group-label">Position</label>
+      <div class="inline-row">
+        <div class="inline-field">
+          <label for="positionX">X</label>
+          <input id="positionX" type="number" formControlName="positionX" />
+        </div>
+        <div class="inline-field">
+          <label for="positionY">Y</label>
+          <input id="positionY" type="number" formControlName="positionY" />
+        </div>
+        <div class="inline-field">
+          <label for="positionZ">Z</label>
+          <input id="positionZ" type="number" formControlName="positionZ" />
+        </div>
+      </div>
+    </div>
+    <div class="field-group">
+      <span class="group-label">Rotation (degrees)</span>
+
+      <div class="inline-row">
+        <div class="inline-field">
+          <label for="rotationRoll">Roll</label>
+          <input id="rotationRoll" type="number" formControlName="rotationRoll" />
+        </div>
+        <div class="inline-field">
+          <label for="rotationPitch">Pitch</label>
+          <input id="rotationPitch" type="number" formControlName="rotationPitch" />
+        </div>
+        <div class="inline-field">
+          <label for="rotationYaw">Yaw</label>
+          <input id="rotationYaw" type="number" formControlName="rotationYaw" />
+        </div>
+      </div>
     </div>
     <p class="err" *ngIf="error">{{ error }}</p>
     <div class="form-actions">

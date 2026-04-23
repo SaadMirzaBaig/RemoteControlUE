@@ -18,6 +18,37 @@
   margin-bottom: 0.75rem;
 }
 
+.field-group {
+  margin-bottom: 0.75rem;
+}
+
+.group-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #333;
+}
+
+.field-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: #666;
+}
+
+.inline-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.inline-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 label {
   font-size: 0.88rem;
   color: #333;

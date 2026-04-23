@@ -33,9 +33,13 @@ private:
 	void HandleObjectDeleted(const TSharedPtr<FJsonObject>& ObjectData);
 
 	// Spawns a new actor or replaces an existing one with the same id.
-	AActor* SpawnOrReplaceActor(const FString& Id, const FString& Shape, const FLinearColor& Color, float Size);
+	AActor* SpawnOrReplaceActor(const FString& Id, const FString& Shape, const FLinearColor& Color, float Size, const FVector& Location, const FRotator& Rotation);
 	// Applies mesh/material/scale changes to an existing actor.
 	void ApplyActorVisuals(AActor* Actor, const FString& Shape, const FLinearColor& Color, float Size);
+	// Sets world position and rotation from optional payload fields.
+	void ApplyActorTransform(AActor* Actor, const TSharedPtr<FJsonObject>& ObjectData) const;
+	// Read "position" / "rotation" objects from JSON
+	void ParseTransformFromPayload(const TSharedPtr<FJsonObject>& ObjectData, FVector& OutLocation, FRotator& OutRotation) const;
 	// Loads the static mesh based on the shape selected from the frontend.
 	UStaticMesh* GetMeshForShape(const FString& Shape) const;
 	// Parses the color field from the JSON object.

@@ -69,6 +69,7 @@ void AObjectManager::ConnectWebSocket()
 
 void AObjectManager::HandleWebSocketMessage(const FString& Message)
 {
+	// store the message in a JSON object
 	TSharedPtr<FJsonObject> JsonMessage;
 	const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Message);
 	if (!FJsonSerializer::Deserialize(Reader, JsonMessage) || !JsonMessage.IsValid())
@@ -122,7 +123,12 @@ void AObjectManager::HandleObjectCreated(const TSharedPtr<FJsonObject>& ObjectDa
 	}
 
 	const FLinearColor Color = ParseColorField(ObjectData);
-	SpawnOrReplaceActor(Id, Shape, Color, static_cast<float>(SizeValue));
+
+	FVector Location;
+	FRotator Rotation;
+	ParseTransformFromPayload(ObjectData, Location, Rotation);
+
+	SpawnOrReplaceActor(Id, Shape, Color, static_cast<float>(SizeValue), Location, Rotation);
 }
 
 void AObjectManager::HandleObjectUpdated(const TSharedPtr<FJsonObject>& ObjectData)
@@ -147,6 +153,7 @@ void AObjectManager::HandleObjectUpdated(const TSharedPtr<FJsonObject>& ObjectDa
 
 	const FLinearColor Color = ParseColorField(ObjectData);
 	ApplyActorVisuals(*ExistingActorPtr, Shape, Color, static_cast<float>(SizeValue));
+	ApplyActorTransform(*ExistingActorPtr, ObjectData);
 }
 
 void AObjectManager::HandleObjectDeleted(const TSharedPtr<FJsonObject>& ObjectData)
@@ -167,7 +174,7 @@ void AObjectManager::HandleObjectDeleted(const TSharedPtr<FJsonObject>& ObjectDa
 	ObjectMap.Remove(Id);
 }
 
-AActor* AObjectManager::SpawnOrReplaceActor(const FString& Id, const FString& Shape, const FLinearColor& Color, float Size)
+AActor* AObjectManager::SpawnOrReplaceActor(const FString& Id, const FString& Shape, const FLinearColor& Color, float Size, const FVector& Location, const FRotator& Rotation)
 {
 	// Replace any previous actor tied to this backend ID to keep state in sync.
 	if (AActor** ExistingActorPtr = ObjectMap.Find(Id))
@@ -185,10 +192,7 @@ AActor* AObjectManager::SpawnOrReplaceActor(const FString& Id, const FString& Sh
 		return nullptr;
 	}
 
-	const FVector SpawnLocation = FVector::ZeroVector;
-	const FRotator SpawnRotation = FRotator::ZeroRotator;
-	// Spawn at origin for now. transform could be added later.
-	AStaticMeshActor* NewActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), SpawnLocation, SpawnRotation);
+	AStaticMeshActor* NewActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), Location, Rotation);
 	if (!IsValid(NewActor))
 	{
 		return nullptr;
@@ -243,6 +247,55 @@ void AObjectManager::ApplyActorVisuals(AActor* Actor, const FString& Shape, cons
 	// Basic shapes are  100 units in size in UE.
 	const float UniformScale = FMath::Max(0.01f, Size / 100.0f);
 	StaticMeshActor->SetActorScale3D(FVector(UniformScale));
+}
+
+void AObjectManager::ParseTransformFromPayload(const TSharedPtr<FJsonObject>& ObjectData, FVector& OutLocation, FRotator& OutRotation) const
+{
+	OutLocation = FVector::ZeroVector;
+	OutRotation = FRotator::ZeroRotator;
+
+	if (!ObjectData.IsValid())
+	{
+		return;
+	}
+
+	const TSharedPtr<FJsonObject>* PositionObj = nullptr;
+	if (ObjectData->TryGetObjectField(TEXT("position"), PositionObj) && PositionObj != nullptr && (*PositionObj).IsValid())
+	{
+		double X = 0.0;
+		double Y = 0.0;
+		double Z = 0.0;
+		(*PositionObj)->TryGetNumberField(TEXT("x"), X);
+		(*PositionObj)->TryGetNumberField(TEXT("y"), Y);
+		(*PositionObj)->TryGetNumberField(TEXT("z"), Z);
+		OutLocation = FVector(static_cast<float>(X), static_cast<float>(Y), static_cast<float>(Z));
+	}
+
+	const TSharedPtr<FJsonObject>* RotationObj = nullptr;
+	if (ObjectData->TryGetObjectField(TEXT("rotation"), RotationObj) && RotationObj != nullptr && (*RotationObj).IsValid())
+	{
+		double Pitch = 0.0;
+		double Yaw = 0.0;
+		double Roll = 0.0;
+		(*RotationObj)->TryGetNumberField(TEXT("pitch"), Pitch);
+		(*RotationObj)->TryGetNumberField(TEXT("yaw"), Yaw);
+		(*RotationObj)->TryGetNumberField(TEXT("roll"), Roll);
+		OutRotation = FRotator(static_cast<float>(Pitch), static_cast<float>(Yaw), static_cast<float>(Roll));
+	}
+}
+
+void AObjectManager::ApplyActorTransform(AActor* Actor, const TSharedPtr<FJsonObject>& ObjectData) const
+{
+	if (!IsValid(Actor) || !ObjectData.IsValid())
+	{
+		return;
+	}
+
+	FVector Location;
+	FRotator Rotation;
+	ParseTransformFromPayload(ObjectData, Location, Rotation);
+	Actor->SetActorLocation(Location);
+	Actor->SetActorRotation(Rotation);
 }
 
 UStaticMesh* AObjectManager::GetMeshForShape(const FString& Shape) const
