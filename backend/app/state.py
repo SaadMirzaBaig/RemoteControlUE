@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import Dict, List
 
 from .models import Object3D, ObjectCreate, ObjectUpdate, generate_object_id
@@ -8,6 +10,8 @@ from .models import Object3D, ObjectCreate, ObjectUpdate, generate_object_id
 class ObjectStore:
     def __init__(self) -> None:
         self._objects: Dict[str, Object3D] = {}
+        self._storage_path = Path(__file__).resolve().parents[1] / "data" / "objects.json"
+        self._load_from_disk()
 
     def list_objects(self) -> List[Object3D]:
         return list(self._objects.values())
@@ -19,6 +23,7 @@ class ObjectStore:
         object_id = generate_object_id()
         obj = Object3D(id=object_id, **data.model_dump())
         self._objects[object_id] = obj
+        self._save_to_disk()
         return obj
 
     def update_object(self, object_id: str, data: ObjectUpdate) -> Object3D | None:
@@ -33,13 +38,39 @@ class ObjectStore:
 
         updated = Object3D(**merged)
         self._objects[object_id] = updated
+        self._save_to_disk()
         return updated
 
     def delete_object(self, object_id: str) -> bool:
         if object_id not in self._objects:
             return False
         del self._objects[object_id]
+        self._save_to_disk()
         return True
+
+    def _load_from_disk(self) -> None:
+        if not self._storage_path.exists():
+            return
+
+        try:
+            content = json.loads(self._storage_path.read_text(encoding="utf-8"))
+            if not isinstance(content, list):
+                return
+
+            for raw_object in content:
+                obj = Object3D(**raw_object)
+                self._objects[obj.id] = obj
+        except (json.JSONDecodeError, OSError, TypeError, ValueError):
+            # Keep backend available even if persistence file is corrupted.
+            self._objects = {}
+
+    def _save_to_disk(self) -> None:
+        self._storage_path.parent.mkdir(parents=True, exist_ok=True)
+        serialized = [obj.model_dump() for obj in self._objects.values()]
+        self._storage_path.write_text(
+            json.dumps(serialized, indent=2),
+            encoding="utf-8",
+        )
 
 
 store = ObjectStore()
