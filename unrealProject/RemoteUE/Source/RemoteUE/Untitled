@@ -1,0 +1,1 @@
+const float UniformScale = FMath::Max(0.01f, Size);

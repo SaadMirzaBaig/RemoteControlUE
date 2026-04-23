@@ -68,7 +68,7 @@ export class ObjectFormComponent implements OnChanges {
     this.form.reset({
       shape: 'cube' as Shape3D,
       color: '',
-      size: 100,
+      size: 1,
       positionX: 0,
       positionY: 0,
       positionZ: 0,

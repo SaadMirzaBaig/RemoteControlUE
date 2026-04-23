@@ -244,8 +244,8 @@ void AObjectManager::ApplyActorVisuals(AActor* Actor, const FString& Shape, cons
 		}
 	}
 
-	// Basic shapes are  100 units in size in UE.
-	const float UniformScale = FMath::Max(0.01f, Size / 100.0f);
+	// 1 unit size from front end in UE.
+	const float UniformScale = FMath::Max(0.01f, Size);
 	StaticMeshActor->SetActorScale3D(FVector(UniformScale));
 }
 
