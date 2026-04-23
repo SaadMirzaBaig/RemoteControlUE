@@ -1,7 +1,15 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes import router
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Remote Control UE Backend", version="0.1.0")
 
@@ -13,3 +21,4 @@ app.add_middleware(
 )
 
 app.include_router(router)
+logger.info("Backend server initialized")

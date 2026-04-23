@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List
 
 from .models import Object3D, ObjectCreate, ObjectUpdate, generate_object_id
+
+logger = logging.getLogger(__name__)
 
 
 class ObjectStore:
@@ -24,6 +27,7 @@ class ObjectStore:
         obj = Object3D(id=object_id, **data.model_dump())
         self._objects[object_id] = obj
         self._save_to_disk()
+        logger.info("Object created and saved to disk: id=%s", object_id)
         return obj
 
     def update_object(self, object_id: str, data: ObjectUpdate) -> Object3D | None:
@@ -39,6 +43,7 @@ class ObjectStore:
         updated = Object3D(**merged)
         self._objects[object_id] = updated
         self._save_to_disk()
+        logger.info("Object updated and saved to disk: id=%s", object_id)
         return updated
 
     def delete_object(self, object_id: str) -> bool:
@@ -46,23 +51,31 @@ class ObjectStore:
             return False
         del self._objects[object_id]
         self._save_to_disk()
+        logger.info("Object deleted and saved to disk: id=%s", object_id)
         return True
 
     def _load_from_disk(self) -> None:
         if not self._storage_path.exists():
+            logger.info("saved objects file not found")
             return
 
         try:
             content = json.loads(self._storage_path.read_text(encoding="utf-8"))
             if not isinstance(content, list):
+                logger.warning("Invalid format in saved objects file")
                 return
 
             for raw_object in content:
                 obj = Object3D(**raw_object)
                 self._objects[obj.id] = obj
+            logger.info(
+                "Loaded %s objects from saved objects file",
+                len(self._objects),
+            )
         except (json.JSONDecodeError, OSError, TypeError, ValueError):
             # Keep backend available even if persistence file is corrupted.
             self._objects = {}
+            logger.exception("Failed to load saved objects file")
 
     def _save_to_disk(self) -> None:
         self._storage_path.parent.mkdir(parents=True, exist_ok=True)
@@ -71,6 +84,7 @@ class ObjectStore:
             json.dumps(serialized, indent=2),
             encoding="utf-8",
         )
+        logger.info("Saved %s objects to saved objects file", len(serialized))
 
 
 store = ObjectStore()
