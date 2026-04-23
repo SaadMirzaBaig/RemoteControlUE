@@ -44,7 +44,7 @@ The frontend triggers actions via REST. The backend maintains state and forwards
 ## Data Flow — Example
 
 ```
-1. User clicks Create (shape=cube, color=red, size=1.0, position x=200)
+1. User clicks Create (shape=cube, color=red, size=1.0, position (x=20,y=0,z=0), rotation (x=0,y=0,z=0))
 2. Angular POST /objects → FastAPI
 3. FastAPI generates UUID, saves to memory and disk, returns Object3D
 4. FastAPI broadcasts object_created event via WebSocket to Unreal
