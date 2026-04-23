@@ -56,10 +56,22 @@ Expected message format:
     "id": "uuid-string",
     "shape": "cube",
     "color": "red",
-    "size": 100
+    "size": 1,
+    "position": {
+      "x": 200.0,
+      "y": 0.0,
+      "z": 50.0
+    },
+    "rotation": {
+      "pitch": 0.0,
+      "yaw": 45.0,
+      "roll": 0.0
+    }
   }
 }
 ```
+
+The same `payload` object shape is used for `object_updated` (all supported fields that are present are applied). `object_deleted` only requires `id` in the payload.
 
 ### ObjectData fields (inside JSON `"payload"`)
 
@@ -68,25 +80,26 @@ Expected message format:
 - `color`:
   - string preset (`red`, `green`, `blue`, `yellow`, `black`, `white`, `orange`, `purple`)
   - or RGB array (example: `[255, 0, 0]`)
-- `size` (number): converted to uniform scale (`size / 100`)
+- `size` (number): **uniform scale** applied to the mesh in Unreal: the value is used as-is (1:1 with the engine; no extra division or remapping), so e.g. `1` is baseline scale. Values below `0.01` are clamped to `0.01`.
+- `position` (object, optional): world location. Fields `x`, `y`, `z` (numbers). Omitted or partial fields default to `0.0` for that component, so the default position is the world origin `(0, 0, 0)`.
+- `rotation` (object, optional): world rotation in degrees, Unreal order: `pitch`, `yaw`, `roll`. Omitted or partial fields default to `0.0` for that component, so the default rotation is zero.
 
-Code naming note:
-- In Unreal code, parsed payload data is referenced as `ObjectData` / `ObjectDataPtr`.
+Position and rotation are intended to be driven from the web frontend; the backend forwards them in the same payload as `shape` / `color` / `size`.
+
 
 ## Behavior
 
 - On `object_created`:
-  - Spawns a new `AStaticMeshActor` at origin.
+  - Spawns a new `AStaticMeshActor` at `position` and `rotation` from the payload (or origin / identity if those objects are missing).
   - If the id already exists, previous actor is destroyed and replaced.
 - On `object_updated`:
-  - Updates mesh/material/scale for the existing actor with matching id.
+  - Updates mesh, material, scale, transform, and any other provided fields for the existing actor with matching id.
 - On `object_deleted`:
   - Destroys actor and removes mapping entry.
 
 ## Notes and Current Limitations
 
 - WebSocket URL is currently hardcoded in `ObjectManager.cpp`.
-- Spawn location and rotation are currently fixed to world origin and zero rotation.
 - Unknown shapes fallback to `cube`.
 - `object_updated` for unknown id is ignored with a warning log.
 
