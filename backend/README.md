@@ -19,7 +19,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ## REST API
 
 - `GET /health`
-- `GET /objects/{id}`
+- `GET /objects`
 - `POST /objects`
 - `PUT /objects/{id}`
 - `DELETE /objects/{id}`
@@ -28,9 +28,19 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ```json
 {
-  "shape": "cube",
-  "color": "red",
-  "size": 100
+    "shape": "cube",
+    "color": "red",
+    "size": 1,
+    "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "rotation": {
+        "pitch": 0.0,
+        "yaw": 0.0,
+        "roll": 0.0
+    }
 }
 ```
 
@@ -51,7 +61,17 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
     "id": "uuid",
     "shape": "cube",
     "color": "red",
-    "size": 100
+    "size": 1,
+    "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "rotation": {
+        "pitch": 0.0,
+        "yaw": 0.0,
+        "roll": 0.0
+    }
   }
 }
 ```
