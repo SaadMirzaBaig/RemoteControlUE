@@ -139,6 +139,6 @@ Sent when an object is deleted.
 
 - **Objects do not reappear in Unreal on replay** — when the Unreal editor stops and replays, spawned actors are destroyed. The backend retains state but Unreal does not request existing objects on reconnect. A `GET /objects` call on `BeginPlay` would resolve this.
 - **No authentication** — the REST API and WebSocket endpoint are open with no auth layer. Acceptable for a local development test but not production ready.
-- **Custom mesh upload not implemented** — Unreal Engine does not natively support runtime STL loading. The proposed approach would use a `RuntimeMeshComponent` plugin or `DataSmith` plugin on the Unreal side with the backend storing uploaded files in a local `/uploads` folder and forwarding the file path via WebSocket.
+- **Custom mesh upload not implemented** — Unreal Engine does not natively support runtime STL loading. The proposed approach would use a `RuntimeMeshComponent` plugin or `DataSmith` plugin on the Unreal side with the backend storing uploaded files in a local `/uploads` folder and forwarding the file path via WebSocket.  I've experience in using blueprints for this task.
 - **Color picker in frontend** — color is entered as a text field (named preset or hex). A visual color picker was considered but kept simple intentionally.
 - **Single page frontend** — no routing or multi-view architecture. Sufficient for the scope of this test.
