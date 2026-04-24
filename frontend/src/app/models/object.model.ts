@@ -1,6 +1,6 @@
 /**
  * 3D object as stored and exchanged with the API.
- * Color is a string in the UI; the backend may also accept/return RGB tuples.
+ * Color is a string in the UI; the backend may also accept/return RGB.
  */
 export type Shape3D = 'cube' | 'sphere' | 'cylinder';
 

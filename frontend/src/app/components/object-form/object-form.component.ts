@@ -9,6 +9,8 @@ import { ObjectsService } from '../../services/objects/objects.service';
   styleUrl: './object-form.component.css',
   standalone: false,
 })
+
+// Component to create or edit 3D objects.
 export class ObjectFormComponent implements OnChanges {
   @Input() object: Object3D | null = null;
   @Output() saved = new EventEmitter<void>();
@@ -16,10 +18,14 @@ export class ObjectFormComponent implements OnChanges {
 
   readonly shapeOptions: Shape3D[] = ['cube', 'sphere', 'cylinder'];
 
+  // Form group for the object form.
   form: ReturnType<FormBuilder['group']>;
+  // Flag to indicate if the form is busy.
   busy = false;
+  // Error message to display.
   error: string | null = null;
 
+  // Constructor to inject the form builder and objects service.
   constructor(
     private fb: FormBuilder,
     private objectsService: ObjectsService,
@@ -39,10 +45,12 @@ export class ObjectFormComponent implements OnChanges {
     });
   }
 
+  // Getter to check if the form is in edit mode.
   get isEditMode(): boolean {
     return this.object !== null;
   }
 
+  // Lifecycle hook to handle changes to the input object.
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['object']) {
       this.error = null;
@@ -59,11 +67,13 @@ export class ObjectFormComponent implements OnChanges {
           rotationRoll: this.object.rotation?.roll ?? 0,
         });
       } else {
+        // Reset the form to defaults if the object is null.
         this.resetToDefaults();
       }
     }
   }
 
+  // Reset the form to default values.
   private resetToDefaults(): void {
     this.form.reset({
       shape: 'cube' as Shape3D,
@@ -79,11 +89,14 @@ export class ObjectFormComponent implements OnChanges {
     this.error = null;
   }
 
+  // Submit the form.
   submit(): void {
+    // Check if the form is invalid.
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
+    // Get the form values.
     const {
       shape,
       color,
@@ -103,6 +116,7 @@ export class ObjectFormComponent implements OnChanges {
     this.error = null;
     this.busy = true;
 
+    // If the object is not null, update the object.
     if (this.object) {
       this.objectsService
         .update(this.object.id, { shape, color, size, position, rotation })
@@ -117,6 +131,7 @@ export class ObjectFormComponent implements OnChanges {
           },
         });
     } else {
+      // If the object is null, create a new object.
       const body: Object3DCreate = { shape, color, size, position, rotation };
       this.objectsService.create(body).subscribe({
         next: () => {
@@ -132,6 +147,7 @@ export class ObjectFormComponent implements OnChanges {
     }
   }
 
+  // Clear the form and emit a cleared event.
   newObject(): void {
     this.cleared.emit();
   }

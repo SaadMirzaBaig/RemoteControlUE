@@ -1,13 +1,17 @@
 <article class="row" *ngIf="object as o">
+
   <div class="meta">
     <code class="id">{{ o.id }}</code>
     <span class="shape">{{ o.shape }}</span>
     <span class="color" [title]="o.color">color: {{ o.color }}</span>
     <span class="size">size: {{ o.size }}</span>
   </div>
+
   <div class="actions">
     <button type="button" (click)="onEditClick()" [disabled]="busy">Edit</button>
     <button type="button" class="danger" (click)="onDeleteClick()" [disabled]="busy">Delete</button>
   </div>
+
   <p class="err" *ngIf="error">{{ error }}</p>
+
 </article>

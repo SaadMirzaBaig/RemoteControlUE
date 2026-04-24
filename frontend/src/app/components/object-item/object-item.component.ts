@@ -8,6 +8,8 @@ import { ObjectsService } from '../../services/objects/objects.service';
   styleUrl: './object-item.component.css',
   standalone: false,
 })
+
+// Component to display a 3D object item.
 export class ObjectItemComponent {
   @Input({ required: true }) object!: Object3D;
   @Output() edit = new EventEmitter<Object3D>();
@@ -16,13 +18,15 @@ export class ObjectItemComponent {
   busy = false;
   error: string | null = null;
 
-  constructor(private objectsService: ObjectsService) {}
+  constructor(private objectsService: ObjectsService) { }
 
+  // Handle edit button click.
   onEditClick(): void {
     this.error = null;
     this.edit.emit(this.object);
   }
 
+  // Handle delete button click.
   onDeleteClick(): void {
     this.error = null;
     if (!confirm(`Delete object ${this.object.id}?`)) {
