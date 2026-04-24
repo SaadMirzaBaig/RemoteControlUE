@@ -36,6 +36,7 @@ void AObjectManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
+// Connect to the WebSocket server and handle messages.
 void AObjectManager::ConnectWebSocket()
 {
 	// Check if websockets module is loaded.
@@ -67,6 +68,7 @@ void AObjectManager::ConnectWebSocket()
 	WebSocket->Connect();
 }
 
+//Handle incoming websocket messages.
 void AObjectManager::HandleWebSocketMessage(const FString& Message)
 {
 	// store the message in a JSON object
@@ -78,6 +80,7 @@ void AObjectManager::HandleWebSocketMessage(const FString& Message)
 		return;
 	}
 
+	// Get the event name from the JSON object.
 	FString EventName;
 	if (!JsonMessage->TryGetStringField(TEXT("event"), EventName))
 	{
@@ -85,6 +88,7 @@ void AObjectManager::HandleWebSocketMessage(const FString& Message)
 		return;
 	}
 
+	// Get the object data from the payload.
 	const TSharedPtr<FJsonObject>* ObjectDataPtr = nullptr;
 	if (!JsonMessage->TryGetObjectField(TEXT("payload"), ObjectDataPtr) || ObjectDataPtr == nullptr || !ObjectDataPtr->IsValid())
 	{
@@ -92,6 +96,7 @@ void AObjectManager::HandleWebSocketMessage(const FString& Message)
 		return;
 	}
 
+	// Handle the different event types based on the event name.
 	if (EventName == TEXT("object_created"))
 	{
 		HandleObjectCreated(*ObjectDataPtr);
@@ -110,6 +115,7 @@ void AObjectManager::HandleWebSocketMessage(const FString& Message)
 	}
 }
 
+// Handle the object_created event.
 void AObjectManager::HandleObjectCreated(const TSharedPtr<FJsonObject>& ObjectData)
 {
 	FString Id;
@@ -122,27 +128,33 @@ void AObjectManager::HandleObjectCreated(const TSharedPtr<FJsonObject>& ObjectDa
 		return;
 	}
 
+	// Parse the color field from the JSON object.
 	const FLinearColor Color = ParseColorField(ObjectData);
 
+	// Parse the location and rotation fields from the JSON object.
 	FVector Location;
 	FRotator Rotation;
 	ParseTransformFromPayload(ObjectData, Location, Rotation);
 
+	// Spawn or replace the actor.
 	SpawnOrReplaceActor(Id, Shape, Color, static_cast<float>(SizeValue), Location, Rotation);
 }
 
+// Handle the object_updated event.
 void AObjectManager::HandleObjectUpdated(const TSharedPtr<FJsonObject>& ObjectData)
 {
 	FString Id;
 	FString Shape;
 	double SizeValue = 100.0;
 
+	// Get the id, shape and size fields from the JSON object.
 	if (!ObjectData->TryGetStringField(TEXT("id"), Id) || !ObjectData->TryGetStringField(TEXT("shape"), Shape) || !ObjectData->TryGetNumberField(TEXT("size"), SizeValue))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("object_updated payload missing required fields."));
 		return;
 	}
 
+	// Get the existing actor from the object map.
 	AActor** ExistingActorPtr = ObjectMap.Find(Id);
 	if (ExistingActorPtr == nullptr || !IsValid(*ExistingActorPtr))
 	{
@@ -151,11 +163,15 @@ void AObjectManager::HandleObjectUpdated(const TSharedPtr<FJsonObject>& ObjectDa
 		return;
 	}
 
+	// Parse the color field from the JSON object.
 	const FLinearColor Color = ParseColorField(ObjectData);
+	// Apply the actor visuals to the existing actor.
 	ApplyActorVisuals(*ExistingActorPtr, Shape, Color, static_cast<float>(SizeValue));
+	// Apply the actor transform to the existing actor.
 	ApplyActorTransform(*ExistingActorPtr, ObjectData);
 }
 
+// Handle the object_deleted event.
 void AObjectManager::HandleObjectDeleted(const TSharedPtr<FJsonObject>& ObjectData)
 {
 	FString Id;
@@ -165,15 +181,19 @@ void AObjectManager::HandleObjectDeleted(const TSharedPtr<FJsonObject>& ObjectDa
 		return;
 	}
 
+	// Get the existing actor from the object map.
 	AActor** ExistingActorPtr = ObjectMap.Find(Id);
+	// Destroy the actor if it exists.
 	if (ExistingActorPtr != nullptr && IsValid(*ExistingActorPtr))
 	{
 		(*ExistingActorPtr)->Destroy();
 	}
 
+	// Remove the actor from the object map.
 	ObjectMap.Remove(Id);
 }
 
+// Spawn or replace the actor.
 AActor* AObjectManager::SpawnOrReplaceActor(const FString& Id, const FString& Shape, const FLinearColor& Color, float Size, const FVector& Location, const FRotator& Rotation)
 {
 	// Replace any previous actor tied to this backend ID to keep state in sync.
@@ -191,23 +211,28 @@ AActor* AObjectManager::SpawnOrReplaceActor(const FString& Id, const FString& Sh
 	{
 		return nullptr;
 	}
-
+	
+	// Spawn a new actor in the world.
 	AStaticMeshActor* NewActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), Location, Rotation);
 	if (!IsValid(NewActor))
 	{
 		return nullptr;
 	}
 
+	// Set  the actor to be movable to apply the visuals.
 	if (UStaticMeshComponent* SpawnedMeshComponent = NewActor->GetStaticMeshComponent())
 	{
 		SpawnedMeshComponent->SetMobility(EComponentMobility::Movable);
 	}
 
+	// Apply the actor visuals to the new actor.
 	ApplyActorVisuals(NewActor, Shape, Color, Size);
+	// Add the actor to the object map.
 	ObjectMap.Add(Id, NewActor);
 	return NewActor;
 }
 
+// Apply the actor visuals like shape, color and size.
 void AObjectManager::ApplyActorVisuals(AActor* Actor, const FString& Shape, const FLinearColor& Color, float Size)
 {
 	AStaticMeshActor* StaticMeshActor = Cast<AStaticMeshActor>(Actor);
@@ -216,17 +241,20 @@ void AObjectManager::ApplyActorVisuals(AActor* Actor, const FString& Shape, cons
 		return;
 	}
 
+	// Get the mesh component of the actor.
 	UStaticMeshComponent* MeshComponent = StaticMeshActor->GetStaticMeshComponent();
 	if (!IsValid(MeshComponent))
 	{
 		return;
 	}
 
+	// Get the mesh for the shape.
 	if (UStaticMesh* Mesh = GetMeshForShape(Shape))
 	{
 		MeshComponent->SetStaticMesh(Mesh);
 	}
 
+	// Get the material to use for the actor.
 	UMaterialInterface* MaterialToUse = BaseMaterial;
 	if (!IsValid(MaterialToUse))
 	{
@@ -234,6 +262,7 @@ void AObjectManager::ApplyActorVisuals(AActor* Actor, const FString& Shape, cons
 		MaterialToUse = MeshComponent->GetMaterial(0);
 	}
 
+	// Create a dynamic material instance and set the color.
 	if (IsValid(MaterialToUse))
 	{
 		UMaterialInstanceDynamic* DynamicMaterial = UMaterialInstanceDynamic::Create(MaterialToUse, this);
@@ -249,8 +278,10 @@ void AObjectManager::ApplyActorVisuals(AActor* Actor, const FString& Shape, cons
 	StaticMeshActor->SetActorScale3D(FVector(UniformScale));
 }
 
+// Parse the transform from the JSON object.
 void AObjectManager::ParseTransformFromPayload(const TSharedPtr<FJsonObject>& ObjectData, FVector& OutLocation, FRotator& OutRotation) const
 {
+	// Initialize the output location and rotation.
 	OutLocation = FVector::ZeroVector;
 	OutRotation = FRotator::ZeroRotator;
 
@@ -259,6 +290,7 @@ void AObjectManager::ParseTransformFromPayload(const TSharedPtr<FJsonObject>& Ob
 		return;
 	}
 
+	// Parse the position from the JSON object.
 	const TSharedPtr<FJsonObject>* PositionObj = nullptr;
 	if (ObjectData->TryGetObjectField(TEXT("position"), PositionObj) && PositionObj != nullptr && (*PositionObj).IsValid())
 	{
@@ -271,6 +303,7 @@ void AObjectManager::ParseTransformFromPayload(const TSharedPtr<FJsonObject>& Ob
 		OutLocation = FVector(static_cast<float>(X), static_cast<float>(Y), static_cast<float>(Z));
 	}
 
+	// Parse the rotation from the JSON object.
 	const TSharedPtr<FJsonObject>* RotationObj = nullptr;
 	if (ObjectData->TryGetObjectField(TEXT("rotation"), RotationObj) && RotationObj != nullptr && (*RotationObj).IsValid())
 	{
@@ -284,6 +317,7 @@ void AObjectManager::ParseTransformFromPayload(const TSharedPtr<FJsonObject>& Ob
 	}
 }
 
+// Apply the actor transform like location and rotation.
 void AObjectManager::ApplyActorTransform(AActor* Actor, const TSharedPtr<FJsonObject>& ObjectData) const
 {
 	if (!IsValid(Actor) || !ObjectData.IsValid())
@@ -298,10 +332,13 @@ void AObjectManager::ApplyActorTransform(AActor* Actor, const TSharedPtr<FJsonOb
 	Actor->SetActorRotation(Rotation);
 }
 
+// Load the mesh for the shape.
 UStaticMesh* AObjectManager::GetMeshForShape(const FString& Shape) const
 {
+	// Normalize the shape name for case insensitivity.
 	const FString NormalizedShape = Shape.ToLower();
 
+	
 	if (NormalizedShape == TEXT("cube"))
 	{
 		return LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
@@ -319,6 +356,7 @@ UStaticMesh* AObjectManager::GetMeshForShape(const FString& Shape) const
 	return LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
 }
 
+// Parse the color field from the JSON object.
 FLinearColor AObjectManager::ParseColorField(const TSharedPtr<FJsonObject>& ObjectData) const
 {
 	FString ColorPreset;
@@ -326,6 +364,7 @@ FLinearColor AObjectManager::ParseColorField(const TSharedPtr<FJsonObject>& Obje
 	{
 		return ColorFromPreset(ColorPreset);
 	}
+
 
 	const TArray<TSharedPtr<FJsonValue>>* ColorArray = nullptr;
 	if (ObjectData->TryGetArrayField(TEXT("color"), ColorArray) && ColorArray != nullptr && ColorArray->Num() >= 3)
@@ -346,6 +385,7 @@ FLinearColor AObjectManager::ParseColorField(const TSharedPtr<FJsonObject>& Obje
 	return FLinearColor::White;
 }
 
+// Convert the color preset to a FLinearColor.
 FLinearColor AObjectManager::ColorFromPreset(const FString& Preset)
 {
 	const FString Normalized = Preset.ToLower();
