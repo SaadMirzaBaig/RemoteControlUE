@@ -119,7 +119,7 @@ Sent when an object is deleted.
 | Backend | FastAPI | Native async support, built-in WebSocket, automatic Swagger docs, clean Pydantic integration |
 | Frontend | Angular (NgModule) | Required by test, single page with no routing needed |
 | Unreal | C++ only | Required by test, no Blueprint-only solutions |
-| Persistence | JSON file | Simple, no external dependencies, satisfies the "simple persistence" requirement |
+| Persistence | JSON file | Simple and straighforward for the test, no external dependencies. |
 | Logging | Python logging module | Writes to terminal |
 
 ---
